@@ -3,8 +3,8 @@
 from bs4 import BeautifulSoup
 import requests, json
 from advanced_expiry_caching import Cache
-from datetime import date
-import Delegacion, Calidad from db_and_flask
+from datetime import date, timedelta
+from db_and_flask import Delegacion, Calidad
 
 FILENAME = 'cache.json'
 program_cache = Cache(FILENAME)
@@ -38,44 +38,57 @@ def get_tr_tags(url):
     return soup.findChildren('tr', {"class": "trLink"})
 
 #########################################################################################################################################
-start_date = date(2019,3,1).strftime('%Y/%m/%d')
-end_date = date(2019,3,31).strftime('%Y/%m/%d')
-url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/?fecha='+ start_date +'&mod=deleg&fin='+ end_date +'&btnDo=Consultar'
 
-main_pg_data = scrape_pg(url)
-delegaciones = get_urls(main_pg_data)
+start_date = date(2019,3,1)
+end_date = date(2019,3,31)
+delta = end_date - start_date
 
-colonias = []
-for delegacion, url in delegaciones:
-    tr_tags = get_tr_tags(url)
-    for tr_tag in tr_tags:
-        if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
-            a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
-            url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
-            colonia = (a.text.strip())
+for i in range(delta.days + 1):
+    day = ((start_date + timedelta(days=i)).strftime('%Y/%m/%d'))
+    print(day)
+    url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/?fecha='+ day +'&mod=deleg&fin='+ day +'&btnDo=Consultar'
+
+    main_pg_html = scrape_pg(url)
+    if main_pg_html:
+        delegaciones = get_urls(main_pg_html)
+
+        colonias = []
+        for delegacion, url in delegaciones:
+            tr_tags = get_tr_tags(url)
+            for tr_tag in tr_tags:
+                if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
+                    a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
+                    url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
+                    colonia = (a.text.strip())
+                else:
+                    pass
+                colonias.append([delegacion, colonia, url])
+
+        cruces = []
+        for delegacion, colonia, url in colonias:
+            tr_tags = get_tr_tags(url)
+            for tr_tag in tr_tags:
+                td = tr_tag.findChild('td', {"class": "linkDel"})
+                cruce = (td.text.strip())
+                cruces.append([delegacion, colonia, cruce, url])
+
+        all_data=[]
+        for delegacion, colonia, cruce, url in cruces:
+            data = scrape_pg(url)
+            soup = BeautifulSoup(data, "html.parser")
+            tr_tags=soup.findChildren('tr', {"class": "trLink"})
+            data_pt=[]
+            data_pt.append(url)
+            data_pt.append(day)
+            data_pt.append(delegacion)
+            data_pt.append(colonia)
+            data_pt.append(cruce)
+            for tr_tag in tr_tags :
+                for pt in tr_tag.findChildren('td')[1:]:
+                    data_pt.append(pt.text.strip())
+            all_data.append(data_pt)
         else:
             pass
-        colonias.append([delegacion, colonia, url])
 
-cruces = []
-for delegacion, colonia, url in colonias:
-    tr_tags = get_tr_tags(url)
-    for tr_tag in tr_tags:
-        td = tr_tag.findChild('td', {"class": "linkDel"})
-        cruce = (td.text.strip())
-        cruces.append([delegacion, colonia, cruce, url])
 
-all_data=[]
-for delegacion, colonia, cruce, url in cruces:
-    data = scrape_pg(url)
-    soup = BeautifulSoup(data, "html.parser")
-    tr_tags=soup.findChildren('tr', {"class": "trLink"})
-    data_pt=[]
-    data_pt.append(url)
-    data_pt.append(delegacion)
-    data_pt.append(colonia)
-    data_pt.append(cruce)
-    for tr_tag in tr_tags :
-        for pt in tr_tag.findChildren('td')[1:]:
-            data_pt.append(pt.text.strip())
-    all_data.append(data_pt)
+print()
