@@ -1,5 +1,3 @@
-#'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'
-
 # -*- coding: utf-8 -*-
 import codecs
 import sys
@@ -8,15 +6,15 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
 from bs4 import BeautifulSoup
 import requests, json
 from advanced_expiry_caching import Cache
-from datetime import date, timedelta
-import sys
-from db_and_flask import Delegacion, Calidad
+from datetime import date, timedelta, datetime
+from main_app import Delegacion, Calidad, session
 
+######################### Scraping Functions ####################################
 FILENAME = 'cache.json'
 program_cache = Cache(FILENAME)
 
 def scrape_pg(url):
-    '''Attempts to find data in cache, if unable requests data from webpage and saves it in the cache. Returns scraped data as text.'''
+    ''''''
     if program_cache.get(url):
         # print('inside try')
         data = program_cache.get(url)                                           # tries to get data from cache
@@ -30,7 +28,7 @@ def scrape_pg(url):
     return data
 
 def get_urls(data, urls_lst=[]):
-    '''Takes scraped data from a webpage, finds the tr tags with class 'trLink', parses the url and url text and returns a list of 2 element lists. the first element is the url text and the second element is the url.'''
+    ''''''
     soup = BeautifulSoup(data, "html.parser")
     tr_tags=soup.findChildren('tr', {"class": "trLink"})
     for tr_tag in tr_tags:
@@ -48,24 +46,32 @@ def get_tr_tags(url):
     soup = BeautifulSoup(data, "html.parser")
     return soup.findChildren('tr', {"class": "trLink"})
 
-def add_delegacion(name):
+############################## DB Functions #####################################
+
+def add_delegacion_to_db(name):
     delegacion = Delegacion.query.filter_by(name=name).first()
-    if artist:
-        return artist
+    if delegacion:
+        return delegacion
     else:
         delegacion = Delegacion(name=name)
         session.add(delegacion)
         session.commit()
     return delegacion
 
-# def add_calidad():
-#
-#     return
+def add_calidad_to_db(date, neighborhood, street, num_samples, readings, average, num_no_cl, num_low_cl, num_rule_cl, num_excess_cl, url):
+    calidad = Calidad.query.filter_by(date = date, street = street, average = average).first()
+    if calidad:
+        return calidad
+    else:
+        calidad = Calidad(date = date, neighborhood = neighborhood, street = street, num_samples = num_samples, readings = readings, average = average, num_no_cl = num_no_cl, num_low_cl = num_low_cl, num_rule_cl = num_rule_cl, num_excess_cl = num_excess_cl, url = url)
+        session.add(calidad)
+        session.commit()
+    return calidad
 
-#########################################################################################################################################
+######################## Scrape Data and Put into DB ############################
 
-start_date = date(2019,3,1)
-end_date = date(2019,3,1)
+start_date = date(2019,1,1)
+end_date = date(2019,1,31)
 delta = end_date - start_date
 
 for i in range(delta.days + 1):
@@ -73,12 +79,12 @@ for i in range(delta.days + 1):
     print(day)
     url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/?fecha='+ day +'&mod=deleg&fin='+ day +'&btnDo=Consultar'
 
-    # main_pg_html = scrape_pg('https://www.nps.gov/index.htm')
     main_pg_html = scrape_pg(url)
     delegaciones = get_urls(main_pg_html)
 
     colonias = []
     for delegacion, url in delegaciones:
+        add_delegacion_to_db(name=delegacion)
         tr_tags = get_tr_tags(url)
         for tr_tag in tr_tags:
             if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
@@ -97,22 +103,15 @@ for i in range(delta.days + 1):
                 cruce = (td.text.strip())
                 cruces.append([delegacion, colonia, cruce, url])
 
-    all_data=[]
+
     for delegacion, colonia, cruce, url in cruces:
             data_pt = []
             tr_tags = get_tr_tags(url)
             for tr_tag in tr_tags :
-                data_pt.append(day)
-                data_pt.append(delegacion)
-                data_pt.append(colonia)
-                data_pt.append(cruce)
                 for pt in tr_tag.findChildren('td')[1:]:
-                    data_pt.append(pt.text.strip())
-                data_pt.append(url)
-                all_data.append(data_pt)
+                    if pt.text.strip()=='':
+                        data_pt.append(0)
+                    else:
+                        data_pt.append(pt.text.strip())
                 data_pt = []
-
-    for data_pt in all_data:
-        print(data_pt)
-        add_delegacion(data_pt[1])
-        break
+                add_calidad_to_db (date = datetime.strptime(day,'%Y/%m/%d').date(), neighborhood = colonia, street = cruce, num_samples = int(data_pt[0]), readings = int(data_pt[1]), average = float(data_pt[2]), num_no_cl = int(data_pt[3]), num_low_cl = int(data_pt[4]), num_rule_cl = int(data_pt[5]), num_excess_cl = int(data_pt[6]), url = url)
