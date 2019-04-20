@@ -9,6 +9,7 @@ from advanced_expiry_caching import Cache
 from datetime import date, timedelta, datetime
 from main_app import Delegacion, Calidad, session
 import time
+import unidecode
 
 ######################### Scraping Functions ####################################
 FILENAME = 'cache.json'
@@ -30,7 +31,7 @@ def scrape_pg(url):
 
 def get_urls(data, urls_lst=[]):
     ''''''
-    soup = BeautifulSoup(data, "html.parser")
+    soup = BeautifulSoup(data, "html.parser")                                   #
     tr_tags=soup.findChildren('tr', {"class": "trLink"})
     for tr_tag in tr_tags:
         if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
@@ -52,11 +53,12 @@ def get_tr_tags(url):
 
 def get_or_create_delegacion_db(name):
     ''''''
-    delegacion = Delegacion.query.filter_by(name=name).first()
+    accents_removed_delegacion = unidecode.unidecode(name)
+    delegacion = Delegacion.query.filter_by(name=accents_removed_delegacion).first()
     if delegacion:
         return delegacion
     else:
-        delegacion = Delegacion(name=name)
+        delegacion = Delegacion(name=accents_removed_delegacion)
         session.add(delegacion)
         session.commit()
     return delegacion
@@ -67,17 +69,19 @@ def get_or_create_calidad_db(date, neighborhood, street, num_samples, readings, 
     if calidad:
         return calidad
     else:
-        delegacion = get_or_create_delegacion_db(delegacion)
-        calidad = Calidad(date = date, neighborhood = neighborhood, street = street, num_samples = num_samples, readings = readings, average = average, num_no_cl = num_no_cl, num_low_cl = num_low_cl, num_rule_cl = num_rule_cl, num_excess_cl = num_excess_cl, url = url, delegacion = delegacion)
+        accents_removed_delegacion = unidecode.unidecode(delegacion)
+        accents_removed_neighborhood = unidecode.unidecode(neighborhood)
+        accents_removed_street = unidecode.unidecode(street)
+        delegacion = get_or_create_delegacion_db(accents_removed_delegacion)
+        calidad = Calidad(date = date, neighborhood = accents_removed_neighborhood, street = accents_removed_street, num_samples = num_samples, readings = readings, average = average, num_no_cl = num_no_cl, num_low_cl = num_low_cl, num_rule_cl = num_rule_cl, num_excess_cl = num_excess_cl, url = url, delegacion = delegacion)
         session.add(calidad)
-        session.commit()
     return calidad
 
 ######################## Scrape Data and Put into DB ############################
 start_time = time.time()
 
-start_date = date(2018,11,1)
-end_date = date(2018,11,30)
+start_date = date(2015,1,1)
+end_date = date(2019,4,19)
 delta = end_date - start_date
 
 for i in range(delta.days + 1):
@@ -120,7 +124,10 @@ for i in range(delta.days + 1):
                         data_pt.append(0)
                     else:
                         data_pt.append(pt.text.strip())
+
                 get_or_create_calidad_db (date = datetime.strptime(day,'%Y/%m/%d').date(), neighborhood = colonia, street = cruce, num_samples = int(data_pt[0]), readings = int(data_pt[1]), average = float(data_pt[2]), num_no_cl = int(data_pt[3]), num_low_cl = int(data_pt[4]), num_rule_cl = int(data_pt[5]), num_excess_cl = int(data_pt[6]), url = url , delegacion = delegacion)
                 data_pt = []
+
+session.commit()
 
 print("--- %s seconds ---" % (time.time() - start_time))

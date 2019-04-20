@@ -45,20 +45,20 @@ The project will be expanded to include visual mapping of the regions with the a
 NOTE: Need not have 3 steps, but should have as many as are appropriate!
 
 ## In this repository:
+
 - README.md
-
 - main_app.py
-
 - scrape_data_populate_db.py
-
 - requirements.txt
-
 - database_schema.png
 
-  
-
 ---
+## Acknowledgments
+
+This project was built in part for SI507 class and a great deal of support was provided by the class' instructional team. Some configuration settings among other smaller snippets of code are directly copied from examples during the SI507 class and are attributed to Jackie Cohen (jczetta). The graduate student instructors provided help in debugging and conceptualizing the relationships between different parts of the project which was also immensely helpful. 
+
 ## Code Requirements for Grading
+
 Please check the requirements you have accomplished in your code as demonstrated.
 - [x] This is a completed requirement.
 - [ ] This is an incomplete requirement.

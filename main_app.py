@@ -11,8 +11,7 @@ app.debug = True
 app.use_reloader = True
 app.config['SECRET_KEY'] = 'hard to guess string for app security adgsdfsadfdflsdfsj'
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./calidad_agua.db' # TODO: decide what your new database name will be -- that has to go here
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./test.db' # TODO: decide what your new database name will be -- that has to go here
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///./calidad_agua.db'
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -25,10 +24,10 @@ class Delegacion(db.Model):
     __tablename__="Delegacion"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    # calidad = db.relationship('Calidad', backref='delegacion')
+    calidad = db.relationship('Calidad', backref='delegacion')
 
     def __repr__(self):
-        return self.name
+        return f'{self.id} | {self.name}'
 
 class Calidad(db.Model):
     __tablename__ = "Calidad"
@@ -44,7 +43,7 @@ class Calidad(db.Model):
     num_rule_cl = db.Column(db.Integer)
     num_excess_cl = db.Column(db.Integer)
     url = db.Column(db.String(64))
-    # delegacion_id = db.Column(db.Integer, db.ForeignKey('Delegacion.id'))
+    delegacion_id = db.Column(db.Integer, db.ForeignKey('Delegacion.id'))
 
     def __repr__(self):
         return f"{self.date} | {self.street} | {self.average}"
@@ -56,9 +55,9 @@ def get_delegacion_data_fr_db(delegacion):
         #the page url has the delegacion, should just be provided inside the route function
     #take delgacion and filter db to get corresponding id for delegacion
     #take id and filter main table for all infor regarding that delegacion
-    row=Delegacion.query.filter_by(name=delegacion).first()
-    print(row)
-    return None
+    row = Delegacion.query.filter_by(name=delegacion).all()
+    calidad_data = Calidad.query.filter_by(delegacion_id=row[0].id).all()
+    return calidad_data
 
 ############################# Routes ############################################
 
@@ -66,11 +65,12 @@ def get_delegacion_data_fr_db(delegacion):
 def home():
     return render_template('index.html')
 
-@app.route('/Alvaro_Obregon')
-def query():
-    get_delegacion_data_fr_db('Alvaro Obregon')
-    return None
+# @app.route('/Alvaro_Obregon')
+# def query():
+#
+#     return
 
 if __name__ == '__main__':
     db.create_all() # This will create database in current directory, as set up, if it doesn't exist, but won't overwrite if you restart - so no worries about that
     app.run() # run with this: python main_app.py runserver
+    # print(get_delegacion_data_fr_db('Iztacalco'))

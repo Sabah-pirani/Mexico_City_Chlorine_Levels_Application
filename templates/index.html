@@ -1,0 +1,52 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Mexico City Water Chlorine Levels</title>
+  </head>
+
+  <body>
+    <div class="container">
+        <h1 class='headers'>Mexico City Household Chlorine Level Data</h1>
+            <p class='main'>
+
+              The water infrastructure department of the Mexican government (Sistmas de Aguas de Cuidad de Mexico) provides data on the chlorine levels of water samples it collects throughout Mexico City online at: <a href='http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/'>http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/</a> . The data is reported by Delegaciones, Colonias, and Cruces (Regions, nghborhoods, and streets) and queryable by date. The infrastructure of the site makes it difficult to obtain the information easily and thus difficult to run any analysis on the data.<br><br>
+
+              This application is an ongoing project that scrapes the data from the site and aims to allow researchers to conduct exploratory analysis of the data. To view the data for a specific region select a region below. </p>
+
+            <!-- <form action="http://localhost:5000/result" method='GET' name=dropdown> -->
+            <form name=dropdown>
+              Select a Region
+              <select name="delegacion" onchange = "goToNewPage(document.dropdown.delegacion)" >
+                <option value="" disabled selected hidden>Please Choose...</option>
+                <option value="/Alvaro_Obregon">Alvaro Obregon</option>
+                <option value="/Azcapotzalco">Azcapotzalco</option>
+                <option value="/Benito_Juarez">Benoto Juarez</option>
+                <option value="/Coyoacan">Coyoacan</option>
+                <option value="/Cuajimalpa">Cuajimalpa</option>
+                <option value="/Cuauhtemoc">Cuauhtemoc</option>
+                <option value="/Estado_D_Mexico">Estado de Mexico</option>
+                <option value="/Gustavo_A_Madero">Gustavo A. Madero</option>
+                <option value="/Iztacalco">Iztacalco</option>
+                <option value="/Magalena_Contreras">Magalena Contreras</option>
+                <option value="/Miguel_Hidalgo">Miguel Hidalgo</option>
+                <option value="/Milpa_Alta">Milpa Alta</option>
+                <option value="/Tlahuac">Tlahuac</option>
+                <option value="/Tlalpan">Tlalpan</option>
+                <option value="/Venustiano_Carranza">Venustiano Carranza</option>
+                <option value="/Villa_Carmela">Villa Carmela</option>
+                <option value="/Xochimilco">Xochimilco</option>
+              </select>
+          </form>
+      </div>
+
+  </body>
+
+  <script>
+    function goToNewPage(dropdownlist){
+        var url = dropdownlist.value;
+        if (url != "")
+            {window.open(url);
+        }}
+  </script>
+</html>
