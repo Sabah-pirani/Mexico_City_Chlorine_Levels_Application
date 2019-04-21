@@ -89,8 +89,8 @@ def add_to_date_db(date):
 ######################## Scrape Data and Put into DB ############################
 start_time = time.time()
 
-start_date = date(2019,1,1)
-end_date = date(2019,1,31)
+start_date = date(2018,3,1)
+end_date = date(2019,3,4)
 delta = end_date - start_date
 
 for i in range(delta.days + 1):
@@ -101,43 +101,42 @@ for i in range(delta.days + 1):
 
     url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/?fecha='+ day +'&mod=deleg&fin='+ day +'&btnDo=Consultar'
 
-    if not Fecha.query.filter_by(date=dt_date).first() :
-
-        main_pg_html = scrape_pg(url)
-        delegaciones = get_urls(main_pg_html)
-
-        colonias = []
-        for delegacion, url in delegaciones:
-            # get_or_create_delegacion_db(name=delegacion)
-            tr_tags = get_tr_tags(url)
-            for tr_tag in tr_tags:
-                if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
-                    a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
-                    url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
-                    colonia = (a.text.strip())
-                else:
-                    pass
-                colonias.append([delegacion, colonia, url])
-
-        cruces = []
-        for delegacion, colonia, url in colonias:
-                tr_tags = get_tr_tags(url)
-                for tr_tag in tr_tags:
-                    cruce = tr_tag.findChild('td', {"class": "linkDel"}).text.strip()
-                    data_pt = []
-                    for pt in tr_tag.findChildren('td')[1:]:
-                        if pt.text.strip()=='':
-                            data_pt.append(0)
-                        else:
-                            data_pt.append(pt.text.strip())
-
-                    add_to_date_db(date = dt_date)
-                    add_to_calidad_db (date = dt_date, neighborhood = colonia, street = cruce, num_samples = int(data_pt[0]), readings = int(data_pt[1]), average = float(data_pt[2]), num_no_cl = int(data_pt[3]), num_low_cl = int(data_pt[4]), num_rule_cl = int(data_pt[5]), num_excess_cl = int(data_pt[6]), url = url , delegacion = delegacion)
-                    data_pt = []
-
-    else:
+    if Fecha.query.filter_by(date=dt_date).first():
         pass
 
-session.commit()
+    add_to_date_db(date = dt_date)
+
+    main_pg_html = scrape_pg(url)
+    delegaciones = get_urls(main_pg_html)
+
+    colonias = []
+    for delegacion, url in delegaciones:
+        # get_or_create_delegacion_db(name=delegacion)
+        tr_tags = get_tr_tags(url)
+        for tr_tag in tr_tags:
+            if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
+                a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
+                url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
+                colonia = (a.text.strip())
+            else:
+                pass
+            colonias.append([delegacion, colonia, url])
+
+    cruces = []
+    for delegacion, colonia, url in colonias:
+            tr_tags = get_tr_tags(url)
+            for tr_tag in tr_tags:
+                cruce = tr_tag.findChild('td', {"class": "linkDel"}).text.strip()
+                data_pt = []
+                for pt in tr_tag.findChildren('td')[1:]:
+                    if pt.text.strip()=='':
+                        data_pt.append(0)
+                    else:
+                        data_pt.append(pt.text.strip())
+
+                add_to_calidad_db (date = dt_date, neighborhood = colonia, street = cruce, num_samples = int(data_pt[0]), readings = int(data_pt[1]), average = float(data_pt[2]), num_no_cl = int(data_pt[3]), num_low_cl = int(data_pt[4]), num_rule_cl = int(data_pt[5]), num_excess_cl = int(data_pt[6]), url = url , delegacion = delegacion)
+                data_pt = []
+
+    session.commit()
 
 print("--- %s seconds ---" % (time.time() - start_time))
