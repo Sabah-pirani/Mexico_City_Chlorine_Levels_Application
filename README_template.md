@@ -8,7 +8,7 @@ Sabah Pirani
 
 ## Project Description
 
-The water infrastructure department of the Mexican government (Sistmas de Aguas de Cuidad de Mexico) provides data on the chlorine levels of water samples it collects throughout Mexico City. The data is hosted online at: http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/ . While the data includes dates of sample collection this data isn't displayed on the website, but you are allowed to query the data by date. Furthermore the data is organized such that you must pick a region, then a neighborhood to view the data for ~10 samples and then go back to view any data from a different neighborhood or region. Ultimately, the User interface for the data is poorly designed making it impossible for researchers to make use of this data that is being collected by the government. 
+The water infrastructure department of the Mexican government (Sistmas de Aguas de Cuidad de Mexico) provides data on the chlorine levels of water samples it collects throughout Mexico City. The data is hosted online at: http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/ . While the database being used includes dates of sample collection this data isn't displayed on the website, but you are allowed to query the data by date. Furthermore the data is organized such that you must pick a region, then a neighborhood to view the data for ~10 samples and then go back to view any data from a different neighborhood or region. Ultimately, the User interface for the data is poorly designed making it nearly impossible for researchers to make use of this data that is being collected by the government. 
 
 This application includes a script to query the data from the site and store the data with a date and full information about the location (region, neighborhood and street) in a database. The application provides a very simplistic User Interface to query the data and conduct exploratory data analysis. 
 
@@ -18,7 +18,7 @@ The project will be expanded to include visual mapping of the regions with the a
 
 1. There are two ways in which this application is intended to be used:
 
-   1. The database file provided in the repository has data from XX-XX-XX until 4-16-2019. If you simply wish to query the data provided within the already provided database file you may simply run the main_app.py file on your command line, using the runserver command proceeding the python main_app.py command to allow the application to run on your local computer. Then open any web browser and navigate to your local server address. This page will have an introduction and links to other pages that allow you to query the database and view visualizations. The code for the command line would look as follows: 
+   1. The database file provided in the repository has data from XX-XX-XX until 4-16-2019. If you simply wish to query the data provided within the provided database file you may simply run the main_app.py file on your command line, using the runserver command proceeding the python main_app.py command to allow the application to run on your local computer. Then open any web browser and navigate to your local server address (often ` http://localhost:5000/`). This page will have an introduction and links to other pages that allow you to query the database and view visualizations. The code for the command line would look as follows: 
 
       `python main_app.py runserver`
 
@@ -47,15 +47,23 @@ NOTE: Need not have 3 steps, but should have as many as are appropriate!
 ## In this repository:
 
 - README.md
+
 - main_app.py
+
 - scrape_data_populate_db.py
+
+- calidad_agua.db
+
 - requirements.txt
+
 - database_schema.png
+
+  
 
 ---
 ## Acknowledgments
 
-This project was built in part for SI507 class and a great deal of support was provided by the class' instructional team. Some configuration settings among other smaller snippets of code are directly copied from examples during the SI507 class and are attributed to Jackie Cohen (jczetta). The graduate student instructors provided help in debugging and conceptualizing the relationships between different parts of the project which was also immensely helpful. 
+This project was built in part for SI507 class and a great deal of support was provided by the class' instructional team. Some configuration settings among other smaller snippets of code are directly copied from examples used in SI507 and are attributed to Jackie Cohen (jczetta). The graduate student instructors provided help in debugging and conceptualizing the relationships between different parts of the project which was also immensely helpful. 
 
 ## Code Requirements for Grading
 

@@ -1,9 +1,18 @@
 #http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/
 #Appication configurations sourced from Jackie Cohen (jczetta)
 
+#import from files
+from app_tools import *
+
+#import from libraries
 import os
 from flask import Flask, render_template, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+
+#LIBRARIES HERE FOR DEBUGGING, REMOVE LATER
+import plotly.graph_objs as go
+import plotly.offline as ply
+
 
 ######################### Application configurations ############################
 app = Flask(__name__)
@@ -48,16 +57,14 @@ class Calidad(db.Model):
     def __repr__(self):
         return f"{self.date} | {self.street} | {self.average}"
 
+class Fecha(db.Model):
+    __tablename__='Fecha'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+
 
 ######################## Helper Functions Debugging #########################
-def get_delegacion_data_fr_db(delegacion):
-    #input is delegacion from the selection in the dropdown
-        #the page url has the delegacion, should just be provided inside the route function
-    #take delgacion and filter db to get corresponding id for delegacion
-    #take id and filter main table for all infor regarding that delegacion
-    row = Delegacion.query.filter_by(name=delegacion).all()
-    calidad_data = Calidad.query.filter_by(delegacion_id=row[0].id).all()
-    return calidad_data
+
 
 ############################# Routes ############################################
 
@@ -65,12 +72,36 @@ def get_delegacion_data_fr_db(delegacion):
 def home():
     return render_template('index.html')
 
-# @app.route('/Alvaro_Obregon')
-# def query():
-#
-#     return
+@app.route('/Alvaro_Obregon')
+def Alvaro_Obregon():
+    db_data = get_delegacion_data_fr_db('Alvaro Obregon')
+    date = []
+    average_cl_level = []
+    for pt in db_data:
+        date.append(pt.date)
+        average_cl_level.append(pt.average)
+
+    # create traces-data collections
+    trace = go.Scatter(
+        x = date,
+        y = average_cl_level,
+        name = 'Alvaro Obregon',
+        mode = 'markers'
+    )
+    # create layout dictionary
+    layout = go.Layout(
+        title = "Chlorine Levels in Household Water Samples in Alvaro Obregion Delegacion",
+        xaxis = dict(title = "Time"),
+        yaxis = dict(title = "Concentration of Chlorine in [units]")
+    )
+    # pack the data
+    graph_data = go.Figure(data=[trace], layout=layout)
+
+    # Create the figure
+    plot = ply.plot(graph_data, output_type='div')
+    
+    return render_template('delegaciones.html', plot=plot)
 
 if __name__ == '__main__':
     db.create_all() # This will create database in current directory, as set up, if it doesn't exist, but won't overwrite if you restart - so no worries about that
     app.run() # run with this: python main_app.py runserver
-    # print(get_delegacion_data_fr_db('Iztacalco'))
