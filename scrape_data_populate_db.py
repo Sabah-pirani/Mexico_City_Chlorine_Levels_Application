@@ -63,7 +63,6 @@ def get_or_create_delegacion_db(name):
     else:
         delegacion = Delegacion(name=accents_removed_delegacion)
         session.add(delegacion)
-        session.commit()
     return delegacion
 
 def add_to_calidad_db(date, neighborhood, street, num_samples, readings, average, num_no_cl, num_low_cl, num_rule_cl, num_excess_cl, url, delegacion):
@@ -89,15 +88,15 @@ def add_to_date_db(date):
 ######################## Scrape Data and Put into DB ############################
 start_time = time.time()
 
-start_date = date(2018,3,1)
-end_date = date(2019,3,4)
+start_date = date(2019,4,1)
+end_date = date(2019,4,4)
 delta = end_date - start_date
 
 for i in range(delta.days + 1):
 
     day = ((start_date + timedelta(days=i)).strftime('%Y/%m/%d'))
     dt_date = datetime.strptime(day,'%Y/%m/%d').date()
-    print(day)
+    print('hello',day)
 
     url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/?fecha='+ day +'&mod=deleg&fin='+ day +'&btnDo=Consultar'
 
@@ -111,15 +110,13 @@ for i in range(delta.days + 1):
 
     colonias = []
     for delegacion, url in delegaciones:
-        # get_or_create_delegacion_db(name=delegacion)
+        get_or_create_delegacion_db(name=delegacion)
         tr_tags = get_tr_tags(url)
         for tr_tag in tr_tags:
-            if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
-                a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
-                url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
-                colonia = (a.text.strip())
-            else:
-                pass
+            tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
+            a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
+            url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
+            colonia = (a.text.strip())
             colonias.append([delegacion, colonia, url])
 
     cruces = []
@@ -135,7 +132,7 @@ for i in range(delta.days + 1):
                         data_pt.append(pt.text.strip())
 
                 add_to_calidad_db (date = dt_date, neighborhood = colonia, street = cruce, num_samples = int(data_pt[0]), readings = int(data_pt[1]), average = float(data_pt[2]), num_no_cl = int(data_pt[3]), num_low_cl = int(data_pt[4]), num_rule_cl = int(data_pt[5]), num_excess_cl = int(data_pt[6]), url = url , delegacion = delegacion)
-                data_pt = []
+
 
     session.commit()
 

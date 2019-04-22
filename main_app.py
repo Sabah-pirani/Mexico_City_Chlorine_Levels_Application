@@ -72,9 +72,9 @@ class Fecha(db.Model):
 def home():
     return render_template('index.html')
 
-@app.route('/Alvaro_Obregon')
-def Alvaro_Obregon():
-    db_data = get_delegacion_data_fr_db('Alvaro Obregon')
+@app.route('/<delegacion_name>')
+def Alvaro_Obregon(delegacion_name):
+    db_data = get_delegacion_data_fr_db(delegacion_name)
     date = []
     average_cl_level = []
     for pt in db_data:
@@ -85,12 +85,12 @@ def Alvaro_Obregon():
     trace = go.Scatter(
         x = date,
         y = average_cl_level,
-        name = 'Alvaro Obregon',
+        name = delegacion_name,
         mode = 'markers'
     )
     # create layout dictionary
     layout = go.Layout(
-        title = "Chlorine Levels in Household Water Samples in Alvaro Obregion Delegacion",
+        title = "Chlorine Levels in Household Water Samples in "+delegacion_name+" Delegacion",
         xaxis = dict(title = "Time"),
         yaxis = dict(title = "Concentration of Chlorine in [units]")
     )
@@ -99,7 +99,7 @@ def Alvaro_Obregon():
 
     # Create the figure
     plot = ply.plot(graph_data, output_type='div')
-    
+
     return render_template('delegaciones.html', plot=plot)
 
 if __name__ == '__main__':
