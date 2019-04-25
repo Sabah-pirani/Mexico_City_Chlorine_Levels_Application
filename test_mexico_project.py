@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 class TestScrapeData(unittest.TestCase):
     def test_scrape_pg(self):
+        with patch () as :
 
 #test to see if request.get is not called in the if conditional of the scrape_pg function
 #wil require mock objects which i haven't figured out yet

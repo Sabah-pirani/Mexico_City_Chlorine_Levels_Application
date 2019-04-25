@@ -35,7 +35,7 @@ class Delegacion(db.Model):
     calidad = db.relationship('Calidad', backref='delegacion')
 
     def __repr__(self):
-        return f'{self.id} | {self.name}'
+        return f'{self.name}'
 
 class Calidad(db.Model):
     __tablename__ = "Calidad"
@@ -71,9 +71,14 @@ class Fecha(db.Model):
 def home():
     return render_template('index.html')
 
+@app.route('/all_data')
+def all_data():
+    plot = get_and_plot_all_data()
+    return render_template('delegaciones.html', plot=plot)
+
 @app.route('/<delegacion_name>')
 def delegacion_view(delegacion_name):
-    plot = get_and_plot_data(delegacion_name)
+    plot = get_and_plot_delegacion_data(delegacion_name)
     return render_template('delegaciones.html', plot=plot)
 
 if __name__ == '__main__':

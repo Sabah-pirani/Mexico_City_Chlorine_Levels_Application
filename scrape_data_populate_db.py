@@ -3,7 +3,6 @@ import codecs
 import sys
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
 
-
 #Imports from Files:
 from advanced_expiry_caching import Cache
 from main_app import Delegacion, Calidad, Fecha, session
@@ -22,31 +21,30 @@ program_cache = Cache(FILENAME)
 def scrape_pg(url):
     ''''''
     if program_cache.get(url):
-        # print('inside try')
         data = program_cache.get(url)                                           # tries to get data from cache
         # print('got fr cache')
     else:                                                                       # if url with the given date periods isn't in the cache then you request the data again
-        # print('inside except')
         data = requests.get(url).text
         # print('made request')
         program_cache.set(url, data, expire_in_days = 365)                      # place data into cache for later
-        # print('done putting in cache')
     return data
 
 def get_urls(data):
     ''''''
     urls_lst = []
-    print('urls list len inside function', len(urls_lst))
-    soup = BeautifulSoup(data, "html.parser")                                   #
-    tr_tags=soup.findChildren('tr', {"class": "trLink"})
+    soup = BeautifulSoup(data, "html.parser")
+    tr_tags = soup.findChildren('tr', {"class": "trLink"})
     for tr_tag in tr_tags:
-        if tr_tag.findChild('a', {"class": "cargaCont"}, href=True):
-            a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
-            url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
-            url_text = (a.text.strip())
-        else:
-            pass
-        urls_lst.append([url_text, url])
+        td_tags = tr_tag.findChildren('td',{"class":''})
+        for td_tag in td_tags:
+            if td_tag.text != '0' :                                             # if td_tag comes across non zero value then it should go on to finding the a tag otherwise not
+                tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
+                a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
+                url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
+                url_text = (a.text.strip())
+                urls_lst.append([url_text, url])
+                break
+
     return urls_lst
 
 def get_tr_tags(url):
@@ -89,33 +87,32 @@ def add_to_date_db(date):
     return None
 
 ######################## Scrape Data and Put into DB ############################
-start_time = time.time()
+start_time_total = time.time()
 
-start_date = date(2015,1,1)
-end_date = date(2019,4,23)
+start_date = date(2016,10,5)
+end_date = date(2017,1,1)
 delta = end_date - start_date
 
 for i in range(delta.days + 1):
+    start_time = time.time()
 
     day = ((start_date + timedelta(days=i)).strftime('%Y/%m/%d'))
     dt_date = datetime.strptime(day,'%Y/%m/%d').date()
 
-    if Fecha.query.filter_by(date=dt_date).first():
+    if Fecha.query.filter_by(date=dt_date).first():                             # if date already in db then go on to next date
         print("i've passed ", day)
+        print("--- %s seconds ---" % (time.time() - start_time))
         continue
 
-    print("I'm getting data for ", day)
     add_to_date_db(date = dt_date)
 
     url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua/?fecha='+ day +'&mod=deleg&fin='+ day +'&btnDo=Consultar'
-    print(url)
 
     main_pg_html = scrape_pg(url)
-    delegaciones = get_urls(data = main_pg_html)
-    print('Number of regions that have data for '+ day +':'+str(len(delegaciones)))
+    delegaciones = get_urls(main_pg_html)
 
     colonias = []
-    for delegacion, url in delegaciones:
+    for delegacion, url in delegaciones:                                        # intermediate loop opens all urls from main pg and finds url for each colonia
         get_or_create_delegacion_db(name=delegacion)
         tr_tags = get_tr_tags(url)
         for tr_tag in tr_tags:
@@ -123,10 +120,9 @@ for i in range(delta.days + 1):
             a = tr_tag.findChild('a', {"class": "cargaCont"}, href=True)
             url = 'http://data.sacmex.cdmx.gob.mx/aplicaciones/calidadagua'+ a['href']
             colonia = (a.text.strip())
-            print('delgacion: '+delegacion+'       colonia: '+colonia)
             colonias.append([delegacion, colonia, url])
 
-    for delegacion, colonia, url in colonias:
+    for delegacion, colonia, url in colonias:                                   # final loop opens url to colonia pg and traverses/collects data points(cruces) on pg
             tr_tags = get_tr_tags(url)
             for tr_tag in tr_tags:
                 cruce = tr_tag.findChild('td', {"class": "linkDel"}).text.strip()
@@ -141,6 +137,8 @@ for i in range(delta.days + 1):
 
     print("I'm committing "+ day +" data to the database")
     session.commit()
-    print('_____________________________________________________________________________')
+    print("--- %s seconds ---" % (time.time() - start_time))
 
-print("--- %s seconds ---" % (time.time() - start_time))
+print('---------------------------------------------------------------------')
+print("--- %s seconds ---" % (time.time() - start_time_total))
+print('_____________________________________________________________________')
