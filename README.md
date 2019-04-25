@@ -34,7 +34,7 @@ The project will be expanded to include visual mapping of the regions with the a
 
 Main Page: The main page provides an overview of the data source. There is a link that allows you to see all the data visualized on one graph (color coded by region) and another that allows you to select the region for which you may want to see data.
 
-![](C:\Users\piran\Documents\University of Michigan\Semester 2\SI 507\Project\main_pg.PNG)
+![](<https://github.com/Sabah-pirani/Mexico_City_Chlorine_Levels_Application/main_pg.png>)
 
 /all_data: Below is a view of all the data on one plot. The right side allows for breaking down the data by region, you may click on the region name and it will be removed from or added to the graph depending on its prior state. It is clear that there are outlying points. Efforts to clean the data and explore reason why such outliers exist will be pursued in the continuation of this project. 
 
