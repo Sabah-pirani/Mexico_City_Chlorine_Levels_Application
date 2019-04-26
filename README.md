@@ -42,9 +42,9 @@ Main Page: The main page provides an overview of the data source. There is a lin
 
 /<delegacion_name>: When selecting delegacion name 
 
-![](Images\Benito Juarez.PNG)
+![](images/Benito_Juarez.png)
 
-![Milpa Alta](Images\Milpa Alta.PNG)
+![Milpa Alta](images/Milpa_Alta.PNG)
 
 ## Routes in this application
 
