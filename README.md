@@ -38,7 +38,7 @@ Main Page: The main page provides an overview of the data source. There is a lin
 
 /all_data: Below is a view of all the data on one plot. The right side allows for breaking down the data by region, you may click on the region name and it will be removed from or added to the graph depending on its prior state. It is clear that there are outlying points. Efforts to clean the data and explore reason why such outliers exist will be pursued in the continuation of this project. 
 
-![](Images\all_data.PNG)
+![](images\all_data.PNG)
 
 /<delegacion_name>: When selecting delegacion name 
 
